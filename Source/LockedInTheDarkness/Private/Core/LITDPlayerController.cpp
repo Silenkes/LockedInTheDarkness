@@ -31,6 +31,62 @@ void ALITDPlayerController::OnPossess(APawn* InPawn)
 	BindEnhancedInputComponent();
 }
 
+FKey ALITDPlayerController::GetBindingKey(EInputActionType ActionType) const
+{
+	UInputAction* Action = nullptr;
+
+	switch (ActionType)
+	{
+	case EInputActionType::EIAT_Move:
+		Action = MoveAction;
+		break;
+
+	case EInputActionType::EIAT_Look:
+		Action = LookAction;
+		break;
+
+	case EInputActionType::EIAT_Jump:
+		Action = JumpAction;
+		break;
+
+	case EInputActionType::EIAT_Crouch:
+		Action = CrouchAction;
+		break;
+
+	case EInputActionType::EIAT_Interact:
+		Action = InteractAction;
+		break;
+
+	default:
+		break;
+	}
+
+	if (!Action)
+		return EKeys::Invalid;
+
+	const ULocalPlayer* LocalPlayer = GetLocalPlayer();
+
+	if (!LocalPlayer)
+		return EKeys::Invalid;
+
+	const UEnhancedInputLocalPlayerSubsystem* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+
+	if (!Subsystem)
+		return EKeys::Invalid;
+
+	const TArray<FKey> Keys = Subsystem->QueryKeysMappedToAction(Action);
+
+	for (const FKey& Key : Keys)
+	{
+		if (Key.IsValid())
+		{
+			return Key;
+		}
+	}
+
+	return EKeys::Invalid;
+}
+
 void ALITDPlayerController::BindEnhancedInputComponent()
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
@@ -48,9 +104,12 @@ void ALITDPlayerController::BindEnhancedInputComponent()
 
 			if (CrouchAction)
 			{
-				EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, ControlledCharacter, &ALITDCharacter::CrouchPressed);
-				EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, ControlledCharacter, &ALITDCharacter::CrouchReleased);
+				EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, ControlledCharacter, &ALITDCharacter::OnCrouch);
+				EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, ControlledCharacter, &ALITDCharacter::OnUnCrouch);
 			}
+
+			if (InteractAction)
+				EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, ControlledCharacter, &ALITDCharacter::Interact);
 		}
 
 		else

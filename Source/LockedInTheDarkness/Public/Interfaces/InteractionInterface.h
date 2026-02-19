@@ -4,6 +4,19 @@
 #include "UObject/Interface.h"
 #include "InteractionInterface.generated.h"
 
+USTRUCT()
+struct FObjectData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	FText Name;
+
+	// * This variable should contain action text that will be shown when player will target this object
+	UPROPERTY(EditAnywhere)
+	FText InteractionText;
+};
+
 UINTERFACE(MinimalAPI)
 class UInteractionInterface : public UInterface
 {
@@ -16,5 +29,5 @@ class LOCKEDINTHEDARKNESS_API IInteractionInterface
 
 public:
 	virtual void Interact(ACharacter* Character) = 0;
-	virtual void EndInteract(ACharacter* Character) = 0;
+	virtual FObjectData GetInteractionData() const = 0;
 };

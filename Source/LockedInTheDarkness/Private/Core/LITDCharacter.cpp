@@ -4,8 +4,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Interfaces/InteractionInterface.h"
-
+#include "CustomComponents/CharacterInteractionComponent.h"
 
 ALITDCharacter::ALITDCharacter()
 {
@@ -17,38 +16,20 @@ ALITDCharacter::ALITDCharacter()
 	ViewCamera->SetupAttachment(GetCapsuleComponent());
 	ViewCamera->SetRelativeLocation(FVector(-10.f, 0.f, 60.f));
 	ViewCamera->bUsePawnControlRotation = true;
+
+	InteractionComponent = CreateDefaultSubobject<UCharacterInteractionComponent>(TEXT("InteractionComponent"));
 }
 
 void ALITDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
-	{
-		Capsule->OnComponentBeginOverlap.AddDynamic(this, &ALITDCharacter::OnCapsuleBeginOverlap);
-		Capsule->OnComponentEndOverlap.AddDynamic(this, &ALITDCharacter::OnCapsuleEndOverlap);
-	}
-}
 
-void ALITDCharacter::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (auto InteractionInterface = Cast<IInteractionInterface>(OtherActor))
-	{
-		UE_LOG(LogTemp, Display, TEXT("[%s] Begin overlap with %s via interface!"), *GetName(), *OtherActor->GetName());
-		InteractionInterface->Interact(this);
-	}
-}
-
-void ALITDCharacter::OnCapsuleEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (auto InteractionInterface = Cast<IInteractionInterface>(OtherActor))
-		InteractionInterface->EndInteract(this);
+	InteractionComponent->Initialize(ViewCamera);
 }
 
 void ALITDCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void ALITDCharacter::Jump()
@@ -78,12 +59,17 @@ void ALITDCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void ALITDCharacter::CrouchPressed()
+void ALITDCharacter::OnCrouch()
 {
 	Crouch();
 }
 
-void ALITDCharacter::CrouchReleased()
+void ALITDCharacter::OnUnCrouch()
 {
 	UnCrouch();
+}
+
+void ALITDCharacter::Interact()
+{
+	InteractionComponent->OnInteract();
 }

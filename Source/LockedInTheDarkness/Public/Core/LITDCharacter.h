@@ -6,6 +6,7 @@
 
 struct FInputActionValue;
 class UCameraComponent;
+class UCharacterInteractionComponent;
 
 UCLASS()
 class LOCKEDINTHEDARKNESS_API ALITDCharacter : public ACharacter
@@ -15,6 +16,7 @@ class LOCKEDINTHEDARKNESS_API ALITDCharacter : public ACharacter
 public:
 	ALITDCharacter();
 
+	UFUNCTION(BlueprintCallable, Category = "Camera")
 	UCameraComponent* GetViewCamera() const { return ViewCamera; }
 
 	virtual void Tick(float DeltaTime) override;
@@ -22,21 +24,19 @@ public:
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
-	void CrouchPressed();
-	void CrouchReleased();
-	
+	void OnCrouch();
+	void OnUnCrouch();
+	void Interact();
+
 protected:
 	virtual void BeginPlay() override;
-
-	UFUNCTION()
-	void OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnCapsuleEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	UCameraComponent* ViewCamera;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
+	UCharacterInteractionComponent* InteractionComponent;
+
 	float CameraSensitivityMultiplier = 1.f;
 };
